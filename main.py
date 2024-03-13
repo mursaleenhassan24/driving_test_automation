@@ -19,7 +19,9 @@ class Main:
             if not ret:
                 print("Video frame is empty or video processing has been successfully completed.")
                 break
-    
+            cv2.imwrite('image.jpg', im0)
+            break
+
             im0 = self.vision_eye_distance_calculator.calculate_distance(im0)
 
             cv2.imshow("visioneye-distance-calculation", im0)
