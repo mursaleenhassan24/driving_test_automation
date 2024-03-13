@@ -9,7 +9,8 @@ class VisionEyeDistanceCalculator:
         self.pixel_per_meter = pixel_per_meter
         self.txt_color, self.txt_background, self.bbox_clr = ((0, 0, 0), (255, 255, 255), (255, 0, 255))
 
-    def calculate_distance(self, im0):
+    def calculate_distance(self, im0, polygons):
+        
         self.h, self.w = im0.shape[:2]
         self.center_point = (0, self.h)
         annotator = Annotator(im0, line_width=2)
@@ -22,6 +23,19 @@ class VisionEyeDistanceCalculator:
 
             for box, track_id, cls in zip(boxes, track_ids, class_ids):
                 if cls == 2 or cls == 7:
+                    
+                    nearest_point = None
+                    min_distance = float('inf')
+
+                    for polygon in polygons:
+                        for point in polygon:
+                            distance = math.sqrt((point[0] - self.center_point[0]) ** 2 + (point[1] - self.center_point[1]) ** 2)
+                            if distance < min_distance:
+                                min_distance = distance
+                                nearest_point = point
+
+                    self.center_point = nearest_point
+
                     annotator.box_label(box, label=str(track_id), color=self.bbox_clr)
                     annotator.visioneye(box, self.center_point)
 
