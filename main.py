@@ -10,39 +10,8 @@ class Main:
         
         self.cap = cv2.VideoCapture(path_stream)
         self.w, self.h, self.fps = (int(self.cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-        self.polygons = [np.array([[569, 289],
-                        [825, 271],
-                        [951, 594],
-                        [493, 641],
-                        [568, 289]]), np.array([[606, 109],
-                        [592, 180],
-                        [779, 170],
-                        [749, 100]]), np.array([[ 935,   90],
-                        [1013,  145],
-                        [1101,  222],
-                        [1246,  356],
-                        [1275,  392],
-                        [1275,  231],
-                        [1066,   94],
-                        [ 939,   86]]), np.array([[417, 122],
-                        [301, 252],
-                        [173, 395],
-                        [ 10, 619],
-                        [ 14, 316],
-                        [260, 137],
-                        [418, 120]]), np.array([[ 300,  103],
-                        [ 567,   69],
-                        [ 701,   54],
-                        [ 906,   50],
-                        [1166,   55],
-                        [1122,    2],
-                        [ 684,    3],
-                        [ 389,   28],
-                        [ 309,   59],
-                        [ 300,   99]])]
-        
-        self.polygons = [self.interpolate_points(poly) for poly in self.polygons]
-        
+        self.polygons = []
+                
     def interpolate_points(self, array):
         interpolated_points = []
         for i in range(len(array) - 1):
@@ -84,6 +53,8 @@ class Main:
 
             if self.polygons == []:
                 self.polygons = PolygonDrawer("visioneye-distance-calculation", image=im0).run()
+                self.polygons = [self.interpolate_points(poly) for poly in self.polygons]
+
             self.draw_polygons(im0)
 
             self.put_text(im0, distance)
