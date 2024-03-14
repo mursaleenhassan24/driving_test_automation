@@ -40,6 +40,7 @@ class Main:
                         [ 389,   28],
                         [ 309,   59],
                         [ 300,   99]])]
+        
         self.polygons = [self.interpolate_points(poly) for poly in self.polygons]
         
     def interpolate_points(self, array):
@@ -101,5 +102,3 @@ class Main:
         cv2.destroyAllWindows()
 
 
-main = Main()
-main.run()
