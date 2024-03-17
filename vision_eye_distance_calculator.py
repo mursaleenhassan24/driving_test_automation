@@ -2,9 +2,7 @@ import os
 import cv2
 import math
 import numpy as np
-import random
 
-import torch
 from shapely.geometry import Polygon, Point
 from ultralytics import YOLO, YOLOWorld
 from ultralytics.utils.plotting import Annotator
