@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 from constants import *
@@ -8,6 +9,10 @@ class Main:
     def __init__(self):
         self.vision_eye_distance_calculator = VisionEyeDistanceCalculator(model_path=path_model_yolov8m)
         
+        if path_output:
+            if not os.path.exists(path_output):
+                os.makedirs(path_output)
+
         self.cap = cv2.VideoCapture(path_stream)
         self.w, self.h, self.fps = (int(self.cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
         self.polygons = []

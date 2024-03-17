@@ -12,32 +12,25 @@ from ultralytics.utils.plotting import Annotator
 from constants import *
 
 class VisionEyeDistanceCalculator:
-    def __init__(self, model_path, pixel_per_meter=10):
+    def __init__(self, model_path):
         if not os.path.exists('models'):
             os.makedirs('models')
 
         self.load_model(model_path)
-        self.pixel_per_meter = pixel_per_meter
 
     def load_model(self, model_path):
-        self.model = YOLO(model_path)
-        self.classes = list(self.model.names.values())
-        self.classes_ids = [self.classes.index(clas) for clas in self.classes]
-        self.colors = [random.choices(range(256), k=3) for _ in self.classes_ids]
+        if model_path.endswith('world.pt'):
+            self.model = YOLOWorld(model_path)
+        else:
+            self.model = YOLOWorld(model_path)
 
-    def calculate_distance(self, im0, polygons):
+        self.classes = list(self.model.names.values())
+
+    def calculate_distance(self, im0, polygons, pixel_per_meter=10):
         self.h, self.w = im0.shape[:2]
         self.center_point = (0, self.h)
         annotator = Annotator(im0, line_width=2)
         results = self.model.track(im0, persist=True)
-
-        for result in results:
-            for mask, box in zip(result.masks.xy, result.boxes):
-                points = np.int32([mask])
-                cv2.polylines(im0, points, True, (255, 0, 0), 4)
-                # color_number = self.classes_ids.index(int(box.cls[0]))
-                # cv2.fillPoly(im0, points, self.colors[color_number])
-
         boxes = results[0].boxes.xyxy.cpu()
 
         distance = 0
@@ -46,7 +39,7 @@ class VisionEyeDistanceCalculator:
             class_ids = results[0].boxes.cls.int().cpu().tolist()
 
             for box, track_id, cls in zip(boxes, track_ids, class_ids):
-                if cls == 2 or cls == 7:
+                if self.classes[cls] in VEHICLE_CLASSES:
                     x1, y1, x2, y2 = map(int, box)
                     bounding_box_coords = [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
                     box_centroid = ((x1 + x2) // 2, (y1 + y2) // 2)
@@ -61,14 +54,14 @@ class VisionEyeDistanceCalculator:
 
                         if nearest_point is not None:
                             self.center_point = (int(nearest_point.x), int(nearest_point.y))
-                            distance = math.sqrt((box_centroid[0] - self.center_point[0]) ** 2 + (box_centroid[1] - self.center_point[1]) ** 2) / self.pixel_per_meter
+                            distance = math.sqrt((box_centroid[0] - self.center_point[0]) ** 2 + (box_centroid[1] - self.center_point[1]) ** 2) / pixel_per_meter
                             nearest_voting[distance] = self.center_point 
 
                     if nearest_voting:
                         self.center_point = nearest_voting[min(nearest_voting.keys())]
                         distance = min(nearest_voting.keys())
                     
-                    # annotator.box_label(box, label=str(track_id), color=BOUNDING_BOX_COLOR)
+                    annotator.box_label(box, label=str(track_id), color=BOUNDING_BOX_COLOR)
                     annotator.visioneye(box, self.center_point)
 
         return im0, distance
