@@ -38,11 +38,14 @@ class Main:
             if len(points) > 0:
                 cv2.fillPoly(canvas, [points], FINAL_LINE_COLOR)
 
-    def put_text(self, im0, distance):
+    def put_text(self, im0, distance, pixels_per_meter):
         text = f"Distance: {distance:.2f} m"
         text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.2, 3)
         cv2.rectangle(im0, (self.w - (text_size[0] + 12), 10), (self.w - 2, text_size[1] + 20), TEXT_BACKGROUND, -1)
         cv2.putText(im0, text, (self.w - (text_size[0] + 10), 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, TEXT_COLOR, 3)
+
+        cv2.rectangle(im0, (self.w - (text_size[0] + 12), 40), (self.w - 2, text_size[1] + 20), TEXT_BACKGROUND, -1)
+        cv2.putText(im0, f"Pixels: {pixels_per_meter}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.2, TEXT_COLOR, 3)
 
     def run(self):
         if path_output:
@@ -54,7 +57,7 @@ class Main:
                 print("Video frame is empty or video processing has been successfully completed.")
                 break
 
-            im0, distance = self.vision_eye_distance_calculator.calculate_distance(im0, self.polygons)
+            im0, distance, pixels_per_meter = self.vision_eye_distance_calculator.calculate_distance(im0, self.polygons)
             
             if self.polygons == []:
                 self.polygons = PolygonDrawer("visioneye-distance-calculation", image=im0).run()
@@ -62,7 +65,7 @@ class Main:
 
             self.draw_polygons(im0)
 
-            self.put_text(im0, distance)
+            self.put_text(im0, distance, pixels_per_meter)
 
             cv2.imshow("visioneye-distance-calculation", im0)
             if cv2.waitKey(1) & 0xFF == ord('q'):

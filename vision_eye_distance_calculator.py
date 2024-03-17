@@ -9,6 +9,7 @@ from shapely.geometry import Polygon, Point
 from ultralytics import YOLO, YOLOWorld
 from ultralytics.utils.plotting import Annotator
 
+from helper_functions.helper_functions import *
 from constants import *
 
 class VisionEyeDistanceCalculator:
@@ -26,7 +27,7 @@ class VisionEyeDistanceCalculator:
 
         self.classes = list(self.model.names.values())
 
-    def calculate_distance(self, im0, polygons, pixel_per_meter=10):
+    def calculate_distance(self, im0, polygons):
         self.h, self.w = im0.shape[:2]
         self.center_point = (0, self.h)
         annotator = Annotator(im0, line_width=2)
@@ -41,6 +42,9 @@ class VisionEyeDistanceCalculator:
             for box, track_id, cls in zip(boxes, track_ids, class_ids):
                 if self.classes[cls] in VEHICLE_CLASSES:
                     x1, y1, x2, y2 = map(int, box)
+                    vehicle_height_pixels, vehicle_width_pixels = y2 - y1, x2 - x1
+                    pixel_per_meter = calculate_pixel_per_meter(vehicle_width_pixels, vehicle_height_pixels)
+                    
                     bounding_box_coords = [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]
                     box_centroid = ((x1 + x2) // 2, (y1 + y2) // 2)
 
@@ -64,4 +68,4 @@ class VisionEyeDistanceCalculator:
                     annotator.box_label(box, label=str(track_id), color=BOUNDING_BOX_COLOR)
                     annotator.visioneye(box, self.center_point)
 
-        return im0, distance
+        return im0, distance, pixel_per_meter
