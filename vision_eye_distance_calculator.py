@@ -2,24 +2,42 @@ import os
 import cv2
 import math
 import numpy as np
-from constants import *
+import random
+
+import torch
 from shapely.geometry import Polygon, Point
 from ultralytics import YOLO, YOLOWorld
 from ultralytics.utils.plotting import Annotator
+
+from constants import *
 
 class VisionEyeDistanceCalculator:
     def __init__(self, model_path, pixel_per_meter=10):
         if not os.path.exists('models'):
             os.makedirs('models')
 
-        self.model = YOLOWorld(model_path)
+        self.load_model(model_path)
         self.pixel_per_meter = pixel_per_meter
+
+    def load_model(self, model_path):
+        self.model = YOLO(model_path)
+        self.classes = list(self.model.names.values())
+        self.classes_ids = [self.classes.index(clas) for clas in self.classes]
+        self.colors = [random.choices(range(256), k=3) for _ in self.classes_ids]
 
     def calculate_distance(self, im0, polygons):
         self.h, self.w = im0.shape[:2]
         self.center_point = (0, self.h)
         annotator = Annotator(im0, line_width=2)
         results = self.model.track(im0, persist=True)
+
+        for result in results:
+            for mask, box in zip(result.masks.xy, result.boxes):
+                points = np.int32([mask])
+                cv2.polylines(im0, points, True, (255, 0, 0), 4)
+                # color_number = self.classes_ids.index(int(box.cls[0]))
+                # cv2.fillPoly(im0, points, self.colors[color_number])
+
         boxes = results[0].boxes.xyxy.cpu()
 
         distance = 0
@@ -50,7 +68,7 @@ class VisionEyeDistanceCalculator:
                         self.center_point = nearest_voting[min(nearest_voting.keys())]
                         distance = min(nearest_voting.keys())
                     
-                    annotator.box_label(box, label=str(track_id), color=BOUNDING_BOX_COLOR)
+                    # annotator.box_label(box, label=str(track_id), color=BOUNDING_BOX_COLOR)
                     annotator.visioneye(box, self.center_point)
 
         return im0, distance

@@ -50,7 +50,7 @@ class Main:
                 break
 
             im0, distance = self.vision_eye_distance_calculator.calculate_distance(im0, self.polygons)
-
+            
             if self.polygons == []:
                 self.polygons = PolygonDrawer("visioneye-distance-calculation", image=im0).run()
                 self.polygons = [self.interpolate_points(poly) for poly in self.polygons]
