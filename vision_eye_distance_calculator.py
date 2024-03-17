@@ -33,6 +33,9 @@ class VisionEyeDistanceCalculator:
         boxes = results[0].boxes.xyxy.cpu()
 
         distance = 0
+        pixel_per_meter = 0
+        box_centroid = (0, 0)
+        
         if results[0].boxes.id is not None:
             track_ids = results[0].boxes.id.int().cpu().tolist()
             class_ids = results[0].boxes.cls.int().cpu().tolist()
@@ -66,4 +69,6 @@ class VisionEyeDistanceCalculator:
                     annotator.box_label(box, label=str(track_id), color=BOUNDING_BOX_COLOR)
                     annotator.visioneye(box, self.center_point)
 
-        return im0, distance, pixel_per_meter
+        track_id = 1 if len(track_ids) == 0 else track_ids[0]
+        
+        return im0, distance, pixel_per_meter, track_id, box_centroid

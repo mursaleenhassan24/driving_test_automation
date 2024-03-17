@@ -1,12 +1,15 @@
 import os
 import cv2
 import numpy as np
+
 from constants import *
+from database.database import Database
 from helper_functions.polygon_drawer import PolygonDrawer
 from vision_eye_distance_calculator import VisionEyeDistanceCalculator
 
 class Main:
     def __init__(self):
+        self.database = Database()
         self.vision_eye_distance_calculator = VisionEyeDistanceCalculator(model_path=path_model_yolov8m)
         
         if path_output:
@@ -57,8 +60,9 @@ class Main:
                 print("Video frame is empty or video processing has been successfully completed.")
                 break
 
-            im0, distance, pixels_per_meter = self.vision_eye_distance_calculator.calculate_distance(im0, self.polygons)
-            
+            im0, distance, pixels_per_meter, track_id, box_centroid  = self.vision_eye_distance_calculator.calculate_distance(im0, self.polygons)
+            self.database.insert(track_id, f'{box_centroid}', distance, 0)
+
             if self.polygons == []:
                 self.polygons = PolygonDrawer("visioneye-distance-calculation", image=im0).run()
                 self.polygons = [self.interpolate_points(poly) for poly in self.polygons]
